@@ -1,0 +1,62 @@
+// Add this doGet function to make it work as a web app
+function doGet() {
+  return HtmlService.createHtmlOutput("Email forwarding script is running.");
+}
+
+function forwardOTP() {
+  const threads = GmailApp.search(
+    "from:noreply@openai.com is:unread"
+  );
+  for (let i = 0; i < threads.length; i++) {
+    const messages = threads[i].getMessages();
+
+    for (let j = 0; j < messages.length; j++) {
+      const message = messages[j];
+      const subject = message.getSubject();
+
+      if (subject.toLowerCase().startsWith("your chatgpt code")) {
+        // Send to Discord
+        const payload = {
+          content: `New OTP from OpenAI Subject: ${subject}`,
+        };
+
+        sendToDiscord(payload);
+
+        // Mark the email as read
+        message.markRead();
+      }
+    }
+  }
+}
+
+function sendToDiscord(payload) {
+  const options = {
+    method: "post",
+    contentType: "application/json",
+    payload: JSON.stringify(payload),
+  };
+
+  const webhookUrls = [
+    "https://discord.com/api/webhooks/1337090263960653846/72Ud1WNmbLRMr7n8FDNxo4XU8BFWG52r8oXOtL8zt9LUDSbmhoFyXW1XIFQbeUNTxHzI",
+    "https://discord.com/api/webhooks/1340953550791901246/j0WUZ9y6Y14PSiHoxXBBm9kzZMJj9bXYMNXlq4tLnYB5UInnRGNpysvz_fYQpaFW5uo7",
+  ];
+
+  for (const url of webhookUrls) {
+    try {
+      UrlFetchApp.fetch(url, options);
+    } catch (error) {
+      Logger.log("Error sending to Discord: " + error);
+    }
+  }
+}
+
+function createTrigger() {
+  // Delete existing triggers
+  const triggers = ScriptApp.getProjectTriggers();
+  for (let i = 0; i < triggers.length; i++) {
+    ScriptApp.deleteTrigger(triggers[i]);
+  }
+
+  // Create a new trigger to run every 2 minutes
+  ScriptApp.newTrigger("forwardOTP").timeBased().everyMinutes(1).create();
+}

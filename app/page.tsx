@@ -60,6 +60,10 @@ export default function Home() {
                 </div>
               </div>
             )}
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              OTP hasn&apos;t been updated? wait for at least 1 minute before
+              re-requesting another OTP.
+            </p>
           </div>
         </div>
       </main>
